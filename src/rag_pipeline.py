@@ -2,8 +2,8 @@ import json
 import faiss
 import numpy as np
 
-from transformers import pipeline
 from sentence_transformers import SentenceTransformer, CrossEncoder
+from generate_hyde import generate_hyde
 
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -13,39 +13,12 @@ cross_encoder = CrossEncoder(
     "cross-encoder/ms-marco-MiniLM-L-6-v2"
 )
 
-generator = pipeline(
-    "text-generation",
-    model="distilgpt2"
-)
-
 with open("data/medical_manuals.json", "r", encoding="utf-8") as file:
     documents = json.load(file)
 
 texts = [doc["text"] for doc in documents]
 
 index = faiss.read_index("artifacts/faiss_hnsw.index")
-
-
-def generate_hyde(query):
-    prompt = f"""
-Convert the following colloquial medical complaint
-into a technical medical description:
-
-Complaint:
-{query}
-
-Technical description:
-"""
-
-    output = generator(
-        prompt,
-        max_new_tokens=40,
-        do_sample=True
-    )
-
-    generated = output[0]["generated_text"]
-
-    return generated
 
 
 def retrieve_documents(hyde_text):
